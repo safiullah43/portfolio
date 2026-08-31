@@ -1,27 +1,79 @@
-  - name: Setup Node
-    uses: actions/setup-node@v4
-    with:
-      node-version: '18'
+name: Deploy static content to Pages
 
-  - name: Install dependencies
-    run: npm ci
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
 
-  - name: Build
-    run: npm run build
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-  - name: Show build output (debug)
-    run: |
-      echo "Files in repo root:" && ls -la
-      echo "Built files in dist (if any):" && ls -la dist || true
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
-  - name: Setup Pages
-    uses: actions/configure-pages@v5
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  - name: Upload artifact
-    uses: actions/upload-pages-artifact@v3
-    with:
-      path: dist
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-  - name: Deploy to GitHub Pages
-    id: deployment
-    uses: actions/deploy-pages@v5
+      - name: Install dependencies (use ci if lockfile exists)
+        id: install
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Using npm ci (lockfile found)"
+            npm ci
+          else
+            echo "No lockfile -> using npm install"
+            npm install
+          fi
+
+      - name: Build (only if src/ exists)
+        id: build
+        run: |
+          if [ -d src ]; then
+            echo "src/ found — running build"
+            npm run build
+          else
+            echo "No src/ directory found — skipping build"
+          fi
+
+      - name: Show filesystem (debug)
+        run: |
+          echo "Root files:" && ls -la
+          echo "dist exists?:" && [ -d dist ] && echo "yes" || echo "no"
+
+      - name: Determine artifact path
+        id: set_path
+        run: |
+          if [ -d dist ]; then
+            echo "path=dist" >> $GITHUB_OUTPUT
+          elif [ -d build ]; then
+            echo "path=build" >> $GITHUB_OUTPUT
+          else
+            echo "path=." >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.set_path.outputs.path }}
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

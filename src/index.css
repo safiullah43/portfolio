@@ -1,0 +1,14 @@
+:root {
+  --bg: #0a0a0a;
+  --text: #f8f8f8;
+}
+html,body,#root {
+  height:100%;
+  margin:0;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}

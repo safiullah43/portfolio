@@ -27,20 +27,20 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
-      - - name: Install dependencies (clean install)
-  id: install
-  run: |
-    if [ -f package-lock.json ]; then
-      echo "Cleaning node_modules and package-lock.json for fresh install"
-      rm -rf node_modules package-lock.json
-      npm install
-    else
-      echo "No lockfile -> using npm install"
-      npm install
-    fi
-    
+      - name: Install dependencies (clean install)
+        id: install
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Cleaning node_modules and package-lock.json for fresh install"
+            rm -rf node_modules package-lock.json
+            npm install
+          else
+            echo "No lockfile -> using npm install"
+            npm install
+          fi
+
       - name: Build (only if src/ exists)
         id: build
         run: |

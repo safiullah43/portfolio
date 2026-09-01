@@ -40,6 +40,11 @@ jobs:
             npm install --no-optional
           fi
 
+      - name: Rebuild native modules (attempt recovery for native bindings)
+        run: |
+          echo "Running npm rebuild to try to restore native bindings"
+          npm rebuild --no-progress || true
+
       - name: Build (only if src/ exists)
         id: build
         run: |
@@ -53,17 +58,12 @@ jobs:
       - name: Show filesystem (debug)
         run: |
           echo "Root files:" && ls -la
-          echo "dist exists?:" && [ -d dist ] && echo "yes" || echo "no"
-
-      - name: Determine artifact path
-        id: set_path
-        run: |
+          echo "dist exists?:"
           if [ -d dist ]; then
-            echo "path=dist" >> $GITHUB_OUTPUT
-          elif [ -d build ]; then
-            echo "path=build" >> $GITHUB_OUTPUT
+            echo "yes"
+            ls -la dist | sed -n '1,200p'
           else
-            echo "path=." >> $GITHUB_OUTPUT
+            echo "no"
           fi
 
       - name: Setup Pages
@@ -72,7 +72,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{ steps.set_path.outputs.path }}
+          path: dist
 
       - name: Deploy to GitHub Pages
         id: deployment

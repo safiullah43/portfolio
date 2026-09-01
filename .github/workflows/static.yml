@@ -27,18 +27,17 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
 
-      - name: Install dependencies (clean install)
+      - name: Install dependencies (use ci if lockfile exists)
         id: install
         run: |
           if [ -f package-lock.json ]; then
-            echo "Cleaning node_modules and package-lock.json for fresh install"
-            rm -rf node_modules package-lock.json
-            npm install
+            echo "Using npm ci (lockfile found)"
+            npm ci
           else
-            echo "No lockfile -> using npm install"
-            npm install
+            echo "No lockfile -> using npm install --no-optional"
+            npm install --no-optional
           fi
 
       - name: Build (only if src/ exists)

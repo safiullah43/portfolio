@@ -29,17 +29,18 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies (use ci if lockfile exists)
-        id: install
-        run: |
-          if [ -f package-lock.json ]; then
-            echo "Using npm ci (lockfile found)"
-            npm ci
-          else
-            echo "No lockfile -> using npm install"
-            npm install
-          fi
-
+      - - name: Install dependencies (clean install)
+  id: install
+  run: |
+    if [ -f package-lock.json ]; then
+      echo "Cleaning node_modules and package-lock.json for fresh install"
+      rm -rf node_modules package-lock.json
+      npm install
+    else
+      echo "No lockfile -> using npm install"
+      npm install
+    fi
+    
       - name: Build (only if src/ exists)
         id: build
         run: |
